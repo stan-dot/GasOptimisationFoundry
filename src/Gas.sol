@@ -21,7 +21,7 @@ contract GasContract is Ownable, Constants {
 
     // DID changed to bool
     bool public tradeMode = false;
-    mapping(address => Payment[]) public payments;
+    mapping(address => Payment[]) payments;
     mapping(address => uint256) public whitelist;
     address[5] public administrators;
     bool public isReady = false;
@@ -35,12 +35,13 @@ contract GasContract is Ownable, Constants {
     // PaymentType constant defaultPayment = PaymentType.Unknown;
 
     // todo change this to a mapping
-    History[] public paymentHistory; // when a payment was updated
+    History[] paymentHistory; // when a payment was updated
 
     struct Payment {
         // PaymentType paymentType;
         uint256 paymentID;
         bool adminUpdated;
+        // todo change to bytes
         string recipientName; // max 8 characters
         address recipient;
         address admin; // administrators address
@@ -52,6 +53,7 @@ contract GasContract is Ownable, Constants {
         address updatedBy;
         uint256 blockNumber;
     }
+
     uint256 wasLastOdd = 1;
     mapping(address => uint256) public isOddWhitelistUser;
     
@@ -133,18 +135,11 @@ contract GasContract is Ownable, Constants {
     }
 
     function balanceOf(address _user) public view returns (uint256 balance_) {
-        uint256 balance = balances[_user];
-        return balance;
+        return balances[_user];
     }
 
     function getTradingMode() public view returns (bool mode_) {
-        bool mode = false;
-        if (tradeFlag == 1 || dividendFlag == 1) {
-            mode = true;
-        } else {
-            mode = false;
-        }
-        return mode;
+       return tradeFlag == 1 || dividendFlag == 1;
     }
 
 
