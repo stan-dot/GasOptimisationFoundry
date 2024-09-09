@@ -117,59 +117,37 @@ contract GasContract is Ownable, Constants {
         }
     }
 
-    function getPaymentHistory()
+    function addToWhitelist(address _userAddrs, uint256 _tier)
         public
-        payable
-        returns (History[] memory paymentHistory_)
+        onlyAdminOrOwner
     {
-        return paymentHistory;
+        require(
+            _tier < 255,
+            "Gas Contract - addToWhitelist function -  tier level should not be greater than 255"
+        );
+        whitelist[_userAddrs] = _tier;
+        if (_tier > 3) {
+            whitelist[_userAddrs] = 3;
+        } else if (_tier > 0 && _tier < 3) {
+            whitelist[_userAddrs] = 2;
+        }
+        if (wasLastOdd == 1) {
+            wasLastOdd = 0;
+            isOddWhitelistUser[_userAddrs] = wasLastOdd;
+        } else if (wasLastOdd == 0) {
+            wasLastOdd = 1;
+            isOddWhitelistUser[_userAddrs] = wasLastOdd;
+        } else {
+            revert("Contract hacked, imposible, call help");
+        }
+        emit AddedToWhitelist(_userAddrs, _tier);
     }
 
-    function checkForAdmin(address _user) public view returns (bool admin_) {
-        for (uint256 ii = 0; ii < administrators.length; ii++) {
-            if (administrators[ii] == _user) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     function balanceOf(address _user) public view returns (uint256 balance_) {
         return balances[_user];
     }
 
-    function getTradingMode() public view returns (bool mode_) {
-       return tradeFlag == 1 || dividendFlag == 1;
-    }
-
-
-    function addHistory(address _updateAddress, bool _tradeMode)
-        public
-        returns (bool status_, bool tradeMode_)
-    {
-        History memory history;
-        history.blockNumber = block.number;
-        history.lastUpdate = block.timestamp;
-        history.updatedBy = _updateAddress;
-        paymentHistory.push(history);
-        bool[] memory status = new bool[](tradePercent);
-        for (uint256 i = 0; i < tradePercent; i++) {
-            status[i] = true;
-        }
-        return ((status[0] == true), _tradeMode);
-    }
-
-    function getPayments(address _user)
-        public
-        view
-        returns (Payment[] memory payments_)
-    {
-        require(
-            _user != address(0),
-            "Gas Contract - getPayments function - User must have a valid non zero address"
-        );
-        return payments[_user];
-    }
 
     function transfer(
         address _recipient,
@@ -204,6 +182,54 @@ contract GasContract is Ownable, Constants {
         return (status[0] == true);
     }
 
+    function getPaymentHistory()
+        public
+        payable
+        returns (History[] memory paymentHistory_)
+    {
+        return paymentHistory;
+    }
+
+    function checkForAdmin(address _user) public view returns (bool admin_) {
+        for (uint256 ii = 0; ii < administrators.length; ii++) {
+            if (administrators[ii] == _user) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function getTradingMode() public view returns (bool mode_) {
+       return tradeFlag == 1 || dividendFlag == 1;
+    }
+
+
+    function addHistory(address _updateAddress, bool _tradeMode)
+        public
+        returns (bool status_, bool tradeMode_)
+    {
+        History memory history;
+        history.blockNumber = block.number;
+        history.lastUpdate = block.timestamp;
+        history.updatedBy = _updateAddress;
+        paymentHistory.push(history);
+        bool[] memory status = new bool[](tradePercent);
+        for (uint256 i = 0; i < tradePercent; i++) {
+            status[i] = true;
+        }
+        return ((status[0] == true), _tradeMode);
+    }
+
+    function getPayments(address _user)
+        public
+        view
+        returns (Payment[] memory payments_)
+    {
+        require(
+            _user != address(0),
+            "Gas Contract - getPayments function - User must have a valid non zero address"
+        );
+        return payments[_user];
+    }
     function updatePayment(
         address _user,
         uint256 _ID,
@@ -243,33 +269,6 @@ contract GasContract is Ownable, Constants {
             }
         }
     }
-
-    function addToWhitelist(address _userAddrs, uint256 _tier)
-        public
-        onlyAdminOrOwner
-    {
-        require(
-            _tier < 255,
-            "Gas Contract - addToWhitelist function -  tier level should not be greater than 255"
-        );
-        whitelist[_userAddrs] = _tier;
-        if (_tier > 3) {
-            whitelist[_userAddrs] = 3;
-        } else if (_tier > 0 && _tier < 3) {
-            whitelist[_userAddrs] = 2;
-        }
-        if (wasLastOdd == 1) {
-            wasLastOdd = 0;
-            isOddWhitelistUser[_userAddrs] = wasLastOdd;
-        } else if (wasLastOdd == 0) {
-            wasLastOdd = 1;
-            isOddWhitelistUser[_userAddrs] = wasLastOdd;
-        } else {
-            revert("Contract hacked, imposible, call help");
-        }
-        emit AddedToWhitelist(_userAddrs, _tier);
-    }
-
     function whiteTransfer(
         address _recipient,
         uint256 _amount
